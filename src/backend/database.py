@@ -1,6 +1,4 @@
-"""
 MongoDB database configuration and setup for Mergington High School API
-"""
 
 from pymongo import MongoClient
 from argon2 import PasswordHasher
@@ -165,7 +163,7 @@ initial_activities = {
         "participants": ["william@mergington.edu", "jacob@mergington.edu"]
     },
     "Manga Maniacs": {
-        "description": "Explore the fantastic stories of the most interesting characters from Japanese Manga (graphic novels).",
+        "description": "Jump into the vibrant world of Japanese manga — meet unforgettable heroes, plot-twisting adventures, and bold art styles. Perfect for readers who love action, emotion, and epic character moments.",
         "schedule": "Tuesdays, 7:00 PM - 8:00 PM",
         "schedule_details": {
             "days": ["Tuesday"],
@@ -197,4 +195,3 @@ initial_teachers = [
         "role": "admin"
     }
 ]
-
