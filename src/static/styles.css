@@ -239,6 +239,35 @@ section h3 {
   letter-spacing: 0.3px;
 }
 
+/* Difficulty Badge */
+.difficulty-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 10px;
+  text-transform: capitalize;
+  letter-spacing: 0.3px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.difficulty-badge[data-level="Beginner"] {
+  background: #4caf50;
+  color: white;
+}
+
+.difficulty-badge[data-level="Intermediate"] {
+  background: #ff9800;
+  color: white;
+}
+
+.difficulty-badge[data-level="Advanced"] {
+  background: #f44336;
+  color: white;
+}
+
 /* Capacity Indicator */
 .capacity-container {
   margin: 8px 0;
@@ -581,7 +610,8 @@ footer {
 
 .category-filter,
 .day-filter,
-.time-filter {
+.time-filter,
+.difficulty-filter {
   background-color: var(--background);
   border: 1px solid var(--border);
   color: var(--text-primary);
@@ -594,7 +624,8 @@ footer {
 
 .category-filter.active,
 .day-filter.active,
-.time-filter.active {
+.time-filter.active,
+.difficulty-filter.active {
   background-color: var(--primary);
   color: white;
   border-color: var(--primary-dark);
@@ -602,12 +633,20 @@ footer {
 
 .category-filter:hover,
 .day-filter:hover,
-.time-filter:hover {
+.time-filter:hover,
+.difficulty-filter:hover {
   background-color: var(--primary-light);
   color: white;
 }
 
 .time-filters {
+  width: 100%;
+}
+
+.difficulty-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
   width: 100%;
 }
 
