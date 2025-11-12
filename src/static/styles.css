@@ -851,7 +851,6 @@ footer {
 }
 
 /* Responsive adjustments for share buttons */
-/* Responsive adjustments for share buttons */
 @media (max-width: 768px) {
   .share-buttons {
     grid-template-columns: 1fr;
