@@ -74,7 +74,6 @@ body.dark-mode {
 }
 
 body {
-  font-family: Arial, sans-serif;
   line-height: 1.4;
   color: var(--text-primary);
   max-width: 1200px;
