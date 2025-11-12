@@ -638,6 +638,9 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         `
         }
+        <button class="share-button" data-activity="${name}" data-description="${details.description.replace(/"/g, '&quot;')}" data-schedule="${formattedSchedule.replace(/"/g, '&quot;')}" title="Share this activity">
+          <span class="share-icon">🔗</span>
+        </button>
       </div>
     `;
 
@@ -656,6 +659,12 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       }
     }
+
+    // Add click handler for share button
+    const shareButton = activityCard.querySelector(".share-button");
+    shareButton.addEventListener("click", () => {
+      openShareModal(name, details.description, formattedSchedule);
+    });
 
     activitiesList.appendChild(activityCard);
   }
@@ -937,6 +946,163 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Error signing up:", error);
     }
   });
+
+  // Social sharing functionality
+  function openShareModal(activityName, description, schedule) {
+    const shareUrl = window.location.href;
+    const shareTitle = `${activityName} - Mergington High School`;
+    const shareText = `Check out this activity: ${activityName}! ${description}`;
+    
+    // Try to use native Web Share API if available
+    if (navigator.share) {
+      navigator.share({
+        title: shareTitle,
+        text: shareText,
+        url: shareUrl
+      }).catch((error) => {
+        // If user cancels or error occurs, show custom share modal
+        if (error.name !== 'AbortError') {
+          showCustomShareModal(activityName, description, schedule, shareUrl);
+        }
+      });
+    } else {
+      // Fallback to custom share modal
+      showCustomShareModal(activityName, description, schedule, shareUrl);
+    }
+  }
+
+  function showCustomShareModal(activityName, description, schedule, shareUrl) {
+    // Create share modal if it doesn't exist
+    let shareModal = document.getElementById("share-modal");
+    if (!shareModal) {
+      shareModal = document.createElement("div");
+      shareModal.id = "share-modal";
+      shareModal.className = "modal hidden";
+      shareModal.innerHTML = `
+        <div class="modal-content">
+          <span class="close-share-modal">&times;</span>
+          <h3>Share Activity</h3>
+          <p id="share-activity-name" class="share-activity-name"></p>
+          <div class="share-buttons">
+            <button class="share-option twitter" data-platform="twitter">
+              <span class="share-platform-icon">🐦</span>
+              <span>Twitter</span>
+            </button>
+            <button class="share-option facebook" data-platform="facebook">
+              <span class="share-platform-icon">📘</span>
+              <span>Facebook</span>
+            </button>
+            <button class="share-option linkedin" data-platform="linkedin">
+              <span class="share-platform-icon">💼</span>
+              <span>LinkedIn</span>
+            </button>
+            <button class="share-option email" data-platform="email">
+              <span class="share-platform-icon">✉️</span>
+              <span>Email</span>
+            </button>
+            <button class="share-option copy" data-platform="copy">
+              <span class="share-platform-icon">📋</span>
+              <span>Copy Link</span>
+            </button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(shareModal);
+
+      // Add close handler
+      const closeShareModal = shareModal.querySelector(".close-share-modal");
+      closeShareModal.addEventListener("click", () => {
+        shareModal.classList.remove("show");
+        setTimeout(() => {
+          shareModal.classList.add("hidden");
+        }, 300);
+      });
+
+      // Close when clicking outside
+      shareModal.addEventListener("click", (event) => {
+        if (event.target === shareModal) {
+          shareModal.classList.remove("show");
+          setTimeout(() => {
+            shareModal.classList.add("hidden");
+          }, 300);
+        }
+      });
+    }
+
+    // Update modal content
+    const shareActivityName = shareModal.querySelector("#share-activity-name");
+    shareActivityName.textContent = activityName;
+
+    // Show modal
+    shareModal.classList.remove("hidden");
+    setTimeout(() => {
+      shareModal.classList.add("show");
+    }, 10);
+
+    // Set up share button handlers
+    const shareButtons = shareModal.querySelectorAll(".share-option");
+    shareButtons.forEach((button) => {
+      // Remove old listeners by cloning
+      const newButton = button.cloneNode(true);
+      button.parentNode.replaceChild(newButton, button);
+    });
+
+    // Add new listeners
+    const newShareButtons = shareModal.querySelectorAll(".share-option");
+    newShareButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        handleShare(button.dataset.platform, activityName, description, schedule, shareUrl);
+      });
+    });
+  }
+
+  function handleShare(platform, activityName, description, schedule, shareUrl) {
+    const shareTitle = `${activityName} - Mergington High School`;
+    const shareText = `Check out this activity at Mergington High School!\n\n${activityName}\n${description}\n\nSchedule: ${schedule}`;
+    const encodedUrl = encodeURIComponent(shareUrl);
+    const encodedTitle = encodeURIComponent(shareTitle);
+    const encodedText = encodeURIComponent(shareText);
+    const encodedDescription = encodeURIComponent(description);
+
+    let url = "";
+
+    switch (platform) {
+      case "twitter":
+        url = `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`;
+        window.open(url, "_blank", "width=600,height=400");
+        break;
+      
+      case "facebook":
+        url = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedText}`;
+        window.open(url, "_blank", "width=600,height=400");
+        break;
+      
+      case "linkedin":
+        url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
+        window.open(url, "_blank", "width=600,height=400");
+        break;
+      
+      case "email":
+        const emailSubject = encodeURIComponent(shareTitle);
+        const emailBody = encodeURIComponent(`${shareText}\n\nView more at: ${shareUrl}`);
+        window.location.href = `mailto:?subject=${emailSubject}&body=${emailBody}`;
+        break;
+      
+      case "copy":
+        navigator.clipboard.writeText(shareUrl).then(() => {
+          showMessage("Link copied to clipboard!", "success");
+          // Close the share modal
+          const shareModal = document.getElementById("share-modal");
+          shareModal.classList.remove("show");
+          setTimeout(() => {
+            shareModal.classList.add("hidden");
+          }, 300);
+        }).catch(() => {
+          showMessage("Failed to copy link. Please try again.", "error");
+        });
+        break;
+    }
+  }
 
   // Expose filter functions to window for future UI control
   window.activityFilters = {

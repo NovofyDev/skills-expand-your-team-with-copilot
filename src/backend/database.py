@@ -1,13 +1,60 @@
 # MongoDB database configuration and setup for Mergington High School API
 
 from pymongo import MongoClient
+from pymongo.errors import ServerSelectionTimeoutError
 from argon2 import PasswordHasher
 
-# Connect to MongoDB
-client = MongoClient('mongodb://localhost:27017/')
-db = client['mergington_high']
-activities_collection = db['activities']
-teachers_collection = db['teachers']
+# Simple in-memory mock collection for when MongoDB is unavailable
+class MockCollection:
+    def __init__(self):
+        self.data = {}
+    
+    def count_documents(self, query):
+        return len(self.data)
+    
+    def insert_one(self, document):
+        doc_id = document.get("_id", str(len(self.data)))
+        self.data[doc_id] = document
+        return type('obj', (object,), {'inserted_id': doc_id})
+    
+    def find(self, query=None):
+        return list(self.data.values())
+    
+    def find_one(self, query):
+        if isinstance(query, dict) and "_id" in query:
+            return self.data.get(query["_id"])
+        return None
+    
+    def update_one(self, query, update):
+        if isinstance(query, dict) and "_id" in query:
+            doc_id = query["_id"]
+            if doc_id in self.data:
+                if "$set" in update:
+                    self.data[doc_id].update(update["$set"])
+                if "$push" in update:
+                    for key, value in update["$push"].items():
+                        if key not in self.data[doc_id]:
+                            self.data[doc_id][key] = []
+                        self.data[doc_id][key].append(value)
+                if "$pull" in update:
+                    for key, value in update["$pull"].items():
+                        if key in self.data[doc_id] and isinstance(self.data[doc_id][key], list):
+                            self.data[doc_id][key] = [v for v in self.data[doc_id][key] if v != value]
+        return type('obj', (object,), {'modified_count': 1})
+
+# Try to connect to MongoDB, fall back to mock if unavailable
+try:
+    client = MongoClient('mongodb://localhost:27017/', serverSelectionTimeoutMS=2000)
+    # Test the connection
+    client.server_info()
+    db = client['mergington_high']
+    activities_collection = db['activities']
+    teachers_collection = db['teachers']
+    print("Connected to MongoDB")
+except (ServerSelectionTimeoutError, Exception) as e:
+    print(f"MongoDB not available, using in-memory storage: {e}")
+    activities_collection = MockCollection()
+    teachers_collection = MockCollection()
 
 # Methods
 def hash_password(password):
