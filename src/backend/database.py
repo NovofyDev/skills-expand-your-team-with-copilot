@@ -1,4 +1,4 @@
-MongoDB database configuration and setup for Mergington High School API
+"""MongoDB database configuration and setup for Mergington High School API"""
 
 from pymongo import MongoClient
 from argon2 import PasswordHasher
